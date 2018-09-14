@@ -130,7 +130,7 @@ function update(time, delta)
         batter.anims.play('batterIdle');
     }
 
-    if (this.input.activePointer.isDown)
+    if (this.input.activePointer.justDown)
     {
         batter.anims.play('swing');
         lastSwingTime = time;
