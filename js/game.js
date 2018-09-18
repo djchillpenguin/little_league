@@ -30,12 +30,34 @@ let pitchPhase = 'ready';
 let lastSwingTime = 0;
 let swingCooldown = 500;
 
+let pitchStartLocation = { x: 584, y: 298 };
+let pitchEndLocation = { x: 0, y: 0};
+let shadowStartLocation = { x: 584, y: 369};
+let shadowEndLocation = { x: 0, y: 705};
+
+let fastballTime = .75;
+
+let strikezone = {
+    leftTop: { x: 0 , y: 0 },
+    rightTop: { x: 0, y: 0 },
+    leftBottom: { x: 0, y: 0 },
+    rightBottom: { x: 0, y: 0 }
+};
+
+let pitchArea = {
+    leftTop: { x: 500, y: 400 },
+    rightTop: { x: 800, y: 400 },
+    leftBottom: { x: 500, y: 700 },
+    rightBottom: { x: 800, y: 700 }
+};
+
 function preload()
 {
     this.load.image('background', 'assets/battingView.png');
-    this.load.spritesheet('batter', 'assets/batter.png', { frameWidth: 528 , frameHeight: 480 });
+    this.load.spritesheet('batter', 'assets/batter.png', { frameWidth: 704 , frameHeight: 640 });
     this.load.spritesheet('pitcher', 'assets/pitcher.png', { frameWidth: 128, frameHeight: 192 });
-    this.load.spritesheet('ball', 'assets/baseballBatting.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('ball', 'assets/fastball.png', { frameWidth: 48, frameHeight: 48 });
+    this.load.image('pitchShadow', 'assets/pitchShadow.png');
 }
 
 function create()
@@ -43,14 +65,16 @@ function create()
     background = this.add.sprite(0, 0, 'background');
     background.setOrigin(0, 0);
 
-    batter = this.add.sprite(144, 216, 'batter');
+    batter = this.add.sprite(50, 80, 'batter');
     batter.setOrigin(0, 0);
 
-    pitcher = this.add.sprite(572, 116, 'pitcher');
+    pitcher = this.add.sprite(572, 210, 'pitcher');
     pitcher.setOrigin(0, 0);
 
-    ball = this.physics.add.sprite(572, 116, 'ball');
+    ball = this.physics.add.sprite(pitchStartLocation.x, pitchStartLocation.y, 'ball');
     ball.setAlpha(0);
+
+    pitchShadow = this.physics.add.sprite(shadowStartLocation.x, shadowStartLocation.y, 'pitchShadow');
 
     this.anims.create({
         key: 'swing',
@@ -82,13 +106,18 @@ function create()
 
     this.anims.create({
         key: 'ballPitch',
-        frames: this.anims.generateFrameNumbers('ball', { start: 0, end: 3 }),
-        frameRate: 4,
-        repeat: 0
+        frames: this.anims.generateFrameNumbers('ball', { start: 0, end: 10 }),
+        frameRate: 60,
+        repeat: -1
     });
 
     batter.anims.play('batterIdle');
     pitcher.anims.play('pitcherIdle');
+
+    ball.setScale(0);
+    pitchShadow.setScale(0);
+    ball.setDepth(10);
+    pitchShadow.setDepth(9);
 }
 
 function update(time, delta)
@@ -104,13 +133,63 @@ function update(time, delta)
     if (time > lastPitchTime + ballReleaseTime && pitchPhase === 'pitched')
     {
         pitchPhase = 'ballVisible';
+
+        pitchEndLocation.x = Phaser.Math.Between(pitchArea.leftTop.x, pitchArea.rightTop.x);
+        pitchEndLocation.y = Phaser.Math.Between(pitchArea.leftTop.y, pitchArea.leftBottom.y);
+        shadowEndLocation.x = pitchEndLocation.x;
+
         ball.setVisible(true);
         ball.setAlpha(1);
         ball.anims.play('ballPitch');
-        ball.setPosition(572, 130);
-        ball.setVelocityX(10);
-        ball.setVelocityY(300);
+        ball.setPosition(pitchStartLocation.x, pitchStartLocation.y);
+
+        ballDistance = Phaser.Math.Distance.Between(pitchStartLocation.x, pitchStartLocation.y,
+                        pitchEndLocation.x, pitchEndLocation.y);
+
+        shadowDistance = Phaser.Math.Distance.Between(shadowStartLocation.x, shadowStartLocation.y,
+                        shadowEndLocation.x, shadowEndLocation.y);
+
+        ballSpeed = ballDistance / fastballTime;
+        shadowSpeed = shadowDistance / fastballTime;
+
+        ballVelocityX = findXVelocity(pitchStartLocation.x - pitchEndLocation.x,
+                        pitchStartLocation.y - pitchEndLocation.y, ballSpeed);
+
+        ballVelocityY = findYVelocity(pitchStartLocation.x - pitchEndLocation.x,
+                        pitchStartLocation.y - pitchEndLocation.y, ballSpeed);
+
+        console.log('ball velX = ', ballVelocityX);
+        console.log('ball velY = ', ballVelocityY);
+
+        ball.setVelocityX(ballVelocityX);
+        ball.setVelocityY(ballVelocityY);
+
+        pitchShadow.setVelocityX(findXVelocity(shadowStartLocation.x - shadowEndLocation.x,
+            shadowStartLocation.y - shadowEndLocation.y, shadowSpeed ));
+        pitchShadow.setVelocityY(findYVelocity(shadowStartLocation.x - shadowEndLocation.x,
+            shadowStartLocation.y - shadowEndLocation.y, shadowSpeed));
+
+        //console.log('ball velX = ', ball.velocity.x);
+
         console.log('testBall');
+    }
+
+    if (pitchPhase === 'ballVisible')
+    {
+        ball.setScale((pitchShadow.y - shadowStartLocation.y)
+            / (shadowEndLocation.y - shadowStartLocation.y));
+        pitchShadow.setScale((pitchShadow.y - shadowStartLocation.y)
+            / (shadowEndLocation.y - shadowStartLocation.y));
+    }
+
+    if (pitchShadow.y > shadowEndLocation.y && pitchPhase === 'ballVisible')
+    {
+        ball.anims.stop();
+        ball.setVelocityX(0);
+        ball.setVelocityY(0);
+        pitchShadow.setVelocityX(0);
+        pitchShadow.setVelocityY(0);
+        //console.log('testStopPitch');
     }
 
     if (time > lastPitchTime + pitchResetTime && pitchPhase === 'ballVisible')
@@ -118,10 +197,14 @@ function update(time, delta)
         pitchPhase = 'ready';
         pitcher.anims.play('pitcherIdle');
         batter.anims.play('batterIdle');
-        ball.setPosition(572, 116);
+        ball.setPosition(pitchStartLocation.x, pitchStartLocation.y);
+        pitchShadow.setPosition(shadowStartLocation.x, shadowStartLocation.y);
         ball.setVelocityX(0);
         ball.setVelocityY(0);
-        ball.setAlpha(0);
+
+        ball.setScale(0);
+        pitchShadow.setScale(0);
+
         console.log('testReset');
     }
 
@@ -136,6 +219,28 @@ function update(time, delta)
         lastSwingTime = time;
     }
 
+}
 
+function findXVelocity (x, y, speed) {
+    let angle;
+    angle = Math.atan(Math.abs(y) / Math.abs(x));
 
+    if (x > 0) {
+        return (speed * Math.cos(angle)) * -1;
+    }
+    else {
+        return speed * Math.cos(angle);
+    }
+}
+
+function findYVelocity(x, y, speed) {
+    let angle;
+    angle = Math.atan(Math.abs(y) / Math.abs(x));
+
+    if (y > 0) {
+        return (speed * Math.sin(angle)) * -1;
+    }
+    else {
+        return speed * Math.sin(angle);
+    }
 }
