@@ -136,8 +136,12 @@ function update(time, delta)
 
     if (time > lastPitchTime + pitchTime)
     {
+        pitchShadow.setVelocityX(0);
+        pitchShadow.setVelocityY(0);
         ball.setPosition(pitchStartLocation.x, pitchStartLocation.y);
         pitchShadow.setPosition(shadowStartLocation.x, shadowStartLocation.y);
+        ball.setVelocityX(0);
+        ball.setVelocityY(0);
         pitcher.anims.play('pitch');
         lastPitchTime = time;
         pitchPhase = 'pitched';
@@ -220,42 +224,53 @@ function update(time, delta)
 
         hitAccuracyX = hitTarget.x - pitchEndLocation.x;
         hitAccuracyY = hitTarget.y - pitchEndLocation.y;
+        timingWindow = (lateContactWindow.end - earlyContactWindow.start) / 2
+        swingTiming = pitchShadow.x - lateContactWindow.end + timingWindow;
 
-        if (Math.abs(hitAccuracyX) < 60 && Math.abs(hitAccuracyY < 48))
+        if (Math.abs(hitAccuracyX) < 60 && Math.abs(hitAccuracyY) < 60 && Math.abs(swingTiming) < timingWindow)
         {
-            if (pitchShadow.y > earlyContactWindow.start && pitchShadow.y < earlyContactWindow.end)
+            /*if (pitchShadow.y > earlyContactWindow.start && pitchShadow.y < earlyContactWindow.end)
             {
-                ball.setVelocityX(1 * hitAccuracyX);
-                ball.setVelocityY(10 * hitAccuracyY);
-                pitchShadow.setVelocityX(1 * hitAccuracyX);
-                pitchShadow.setVelocityY(1 * hitAccuracyX);
-                console.log('hit');
+                ball.setVelocityX(-500 + hitAccuracyX);
+                ball.setVelocityY(-250 * (1 / hitAccuracyY) - 500);
+                pitchShadow.setVelocityX(-500 + hitAccuracyX);
+                pitchShadow.setVelocityY(100 * (1 / hitAccuracyX) - 500);
+                console.log('early contact');
             }
             else if (pitchShadow.y > goodContactWindow.start && pitchShadow.y < goodContactWindow.end)
             {
-                ball.setVelocityX(1 * hitAccuracyX);
-                ball.setVelocityY(20 * hitAccuracyY);
-                pitchShadow.setVelocityX(1 * hitAccuracyX);
-                pitchShadow.setVelocityY(1 * hitAccuracyX);
-                console.log('hit');
+                ball.setVelocityX(hitAccuracyX);
+                ball.setVelocityY(-500 * (1 / hitAccuracyY) - 500);
+                pitchShadow.setVelocityX(10 + hitAccuracyX);
+                pitchShadow.setVelocityY(100 * (1 / hitAccuracyX) - 500);
+                console.log('good contact');
             }
             else if (pitchShadow.y > lateContactWindow.start && pitchShadow.y < lateContactWindow.end)
             {
-                ball.setVelocityX(1 * hitAccuracyX);
-                ball.setVelocityY(10 * hitAccuracyY);
-                pitchShadow.setVelocityX(1 * hitAccuracyX);
-                pitchShadow.setVelocityY(1 * hitAccuracyX);
-                console.log('hit');
-            }
-            else if (pitchShadow.y < earlyContactWindow.start)
-            {
-                console.log('miss early');
-            }
-            else
-            {
-                console.log('miss late');
-            }
+                ball.setVelocityX(500 + hitAccuracyX);
+                ball.setVelocityY(-250 * (1 / hitAccuracyY) - 500);
+                pitchShadow.setVelocityX(500 + hitAccuracyX);
+                pitchShadow.setVelocityY(-100 * (1 / hitAccuracyX) - 500);
+                console.log('late contact');
+            }*/
+            ball.setVelocityX(swingTiming * 25);
+            ball.setVelocityY(-250 * (1 / hitAccuracyY) - 500);
+            pitchShadow.setVelocityX(swingTiming * 50);
+            pitchShadow.setVelocityY(-250);
+
         }
+        else if (swingTiming < timingWindow * -1)
+        {
+            console.log('miss early');
+        }
+        else if (swingTiming < timingWindow)
+        {
+            console.log('miss late');
+        }
+
+        console.log('hitAccX = ', hitAccuracyX);
+        console.log('hitAccY = ', hitAccuracyY);
+
         lastSwingTime = time;
     }
 
