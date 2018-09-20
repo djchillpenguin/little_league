@@ -58,7 +58,7 @@ let pitchArea = {
 function preload()
 {
     this.load.image('background', 'assets/battingView.png');
-    this.load.spritesheet('batter', 'assets/batter.png', { frameWidth: 704 , frameHeight: 640 });
+    this.load.spritesheet('batter', 'assets/batterAnimation.png', { frameWidth: 176 , frameHeight: 160 });
     this.load.spritesheet('pitcher', 'assets/pitcher.png', { frameWidth: 128, frameHeight: 192 });
     this.load.spritesheet('ball', 'assets/fastball.png', { frameWidth: 48, frameHeight: 48 });
     this.load.image('pitchShadow', 'assets/pitchShadow.png');
@@ -73,6 +73,7 @@ function create()
     batter = this.add.sprite(50, 80, 'batter');
     batter.setOrigin(0, 0);
     batter.setDepth(11);
+    batter.setScale(4);
 
     pitcher = this.add.sprite(572, 210, 'pitcher');
     pitcher.setOrigin(0, 0);
@@ -88,7 +89,7 @@ function create()
     this.anims.create({
         key: 'swing',
         frames: this.anims.generateFrameNumbers('batter', { start: 0, end: 3 }),
-        frameRate: 16,
+        frameRate: 15,
         repeat: 0
     });
 
@@ -227,7 +228,7 @@ function update(time, delta)
         timingWindow = (lateContactWindow.end - earlyContactWindow.start) / 2
         swingTiming = pitchShadow.x - lateContactWindow.end + timingWindow;
 
-        if (Math.abs(hitAccuracyX) < 60 && Math.abs(hitAccuracyY) < 60 && Math.abs(swingTiming) < timingWindow)
+        if (Math.abs(hitAccuracyX) < 120 && Math.abs(hitAccuracyY) < 120 && Math.abs(swingTiming) < timingWindow)
         {
             /*if (pitchShadow.y > earlyContactWindow.start && pitchShadow.y < earlyContactWindow.end)
             {
@@ -253,10 +254,19 @@ function update(time, delta)
                 pitchShadow.setVelocityY(-100 * (1 / hitAccuracyX) - 500);
                 console.log('late contact');
             }*/
-            ball.setVelocityX(swingTiming * 25);
-            ball.setVelocityY(-250 * (1 / hitAccuracyY) - 500);
-            pitchShadow.setVelocityX(swingTiming * 50);
-            pitchShadow.setVelocityY(-250);
+
+            timedEvent = this.time.addEvent({
+                delay: 100,
+                callback: onEvent,
+                callbackScope: this
+            });
+
+            function onEvent(){
+                ball.setVelocityX(swingTiming * 25);
+                ball.setVelocityY(-250 * (1 / hitAccuracyY) - 500);
+                pitchShadow.setVelocityX(swingTiming * 25);
+                pitchShadow.setVelocityY(-250);
+            }
 
         }
         else if (swingTiming < timingWindow * -1)
