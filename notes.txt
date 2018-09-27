@@ -1,0 +1,25 @@
+Batting/Pitching Phases
+
+setup:
+	- set idle animations
+	- choose pitch location
+	- choose pitch if AI
+	- input: choosing pitches, warmup swings, pausing
+
+pre-pitch:
+	- start pitching animation
+	- input: none
+
+ball visible:
+	- start ball animation
+	- apply motion to ball
+	- input: swing
+
+ball hit:
+	- calculate hit accuracy
+	- assign ball hit velocity and angle
+	- change to fielding view scene
+
+ball missed:
+	- calculate ball/strike
+	- change state to setup

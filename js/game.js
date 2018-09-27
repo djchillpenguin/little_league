@@ -41,6 +41,7 @@ let lateContactWindow = { start: 661, end: 705 };
 
 let fastballTime = .75;
 
+//strikezone, not yet definited
 let strikezone = {
     leftTop: { x: 0 , y: 0 },
     rightTop: { x: 0, y: 0 },
@@ -48,6 +49,7 @@ let strikezone = {
     rightBottom: { x: 0, y: 0 }
 };
 
+//available area for pitch locations
 let pitchArea = {
     leftTop: { x: 500, y: 400 },
     rightTop: { x: 800, y: 400 },
@@ -57,6 +59,7 @@ let pitchArea = {
 
 function preload()
 {
+    //load assets
     this.load.image('background', 'assets/battingView.png');
     this.load.spritesheet('batter', 'assets/batterAnimation.png', { frameWidth: 176 , frameHeight: 160 });
     this.load.spritesheet('pitcher', 'assets/pitcher.png', { frameWidth: 128, frameHeight: 192 });
@@ -67,25 +70,38 @@ function preload()
 
 function create()
 {
+    //create background
     background = this.add.sprite(0, 0, 'background');
     background.setOrigin(0, 0);
 
+    //create batter
     batter = this.add.sprite(50, 80, 'batter');
     batter.setOrigin(0, 0);
     batter.setDepth(11);
     batter.setScale(4);
 
+    //create pitcher
     pitcher = this.add.sprite(572, 210, 'pitcher');
     pitcher.setOrigin(0, 0);
 
+    //create ball
     ball = this.physics.add.sprite(pitchStartLocation.x, pitchStartLocation.y, 'ball');
     ball.setAlpha(0);
+    ball.setScale(0);
+    ball.setDepth(10);
 
+    //create the plate coverage indicator
     hitTarget = this.physics.add.sprite(600, 300, 'hitTarget');
     hitTarget.setAlpha(0.5);
 
+    //create the shadow of the pitching ball
     pitchShadow = this.physics.add.sprite(shadowStartLocation.x, shadowStartLocation.y, 'pitchShadow');
+    pitchShadow.setScale(0);
+    pitchShadow.setDepth(9);
 
+    //create animations
+
+    //swinging
     this.anims.create({
         key: 'swing',
         frames: this.anims.generateFrameNumbers('batter', { start: 0, end: 3 }),
@@ -93,6 +109,7 @@ function create()
         repeat: 0
     });
 
+    //idle batter
     this.anims.create({
         key: 'batterIdle',
         frames: [{ key: 'batter', frame: 4 }],
@@ -100,6 +117,7 @@ function create()
         repeat: -1
     });
 
+    //pitching
     this.anims.create({
         key: 'pitch',
         frames: this.anims.generateFrameNumbers('pitcher', { start: 0, end: 9 }),
@@ -107,6 +125,7 @@ function create()
         repeat: 0
     });
 
+    //idle pitcher
     this.anims.create({
         key: 'pitcherIdle',
         frames: this.anims.generateFrameNumbers('pitcher', { start: 10, end: 11 }),
@@ -114,6 +133,7 @@ function create()
         repeat: -1
     });
 
+    //ball in motion after a pitch
     this.anims.create({
         key: 'ballPitch',
         frames: this.anims.generateFrameNumbers('ball', { start: 0, end: 10 }),
@@ -121,20 +141,18 @@ function create()
         repeat: -1
     });
 
+    //start scene with idle batting and pitcher
     batter.anims.play('batterIdle');
     pitcher.anims.play('pitcherIdle');
-
-    ball.setScale(0);
-    pitchShadow.setScale(0);
-    ball.setDepth(10);
-    pitchShadow.setDepth(9);
 }
 
 function update(time, delta)
 {
+    //updates PCI location with the mouse pointer
     hitTarget.x = this.input.activePointer.x;
     hitTarget.y = this.input.activePointer.y;
 
+    //resets pitch phase
     if (time > lastPitchTime + pitchTime)
     {
         pitchShadow.setVelocityX(0);
@@ -148,6 +166,7 @@ function update(time, delta)
         pitchPhase = 'pitched';
     }
 
+    //starts pitch and ball animation, chooses pitch location
     if (time > lastPitchTime + ballReleaseTime && pitchPhase === 'pitched')
     {
         pitchPhase = 'ballVisible';
@@ -161,6 +180,7 @@ function update(time, delta)
         ball.anims.play('ballPitch');
         ball.setPosition(pitchStartLocation.x, pitchStartLocation.y);
 
+        //need to fix this section, make speed of shadow constant, not the time
         ballDistance = Phaser.Math.Distance.Between(pitchStartLocation.x, pitchStartLocation.y,
                         pitchEndLocation.x, pitchEndLocation.y);
 
@@ -186,6 +206,7 @@ function update(time, delta)
             shadowStartLocation.y - shadowEndLocation.y, shadowSpeed));
     }
 
+    //starts increasing the size of the ball and shadow
     if (pitchPhase === 'ballVisible')
     {
         ball.setScale((pitchShadow.y - shadowStartLocation.y)
@@ -194,6 +215,7 @@ function update(time, delta)
             / (shadowEndLocation.y - shadowStartLocation.y));
     }
 
+    //stops the ball at the point the
     if (pitchShadow.y > shadowEndLocation.y && pitchPhase === 'ballVisible')
     {
         ball.anims.stop();
@@ -203,6 +225,7 @@ function update(time, delta)
         pitchShadow.setVelocityY(0);
     }
 
+    //resets phase
     if (time > lastPitchTime + pitchResetTime && pitchPhase === 'ballVisible')
     {
         pitchPhase = 'ready';
@@ -214,11 +237,13 @@ function update(time, delta)
         pitchShadow.setScale(0);
     }
 
+    //resets batter for warmup swings
     if (pitchPhase === 'ready' && time > lastSwingTime + swingCooldown)
     {
         batter.anims.play('batterIdle');
     }
 
+    //checks for swing contact
     if (this.input.activePointer.justDown)
     {
         batter.anims.play('swing');
