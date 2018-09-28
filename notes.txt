@@ -6,11 +6,9 @@ setup:
 	- choose pitch if AI
 	- input: choosing pitches, warmup swings, pausing
 
-pre-pitch:
+pitch:
 	- start pitching animation
 	- input: none
-
-ball visible:
 	- start ball animation
 	- apply motion to ball
 	- input: swing

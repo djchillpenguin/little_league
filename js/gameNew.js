@@ -52,7 +52,7 @@ var BattingView = new Phaser.Class({
 
     function BattingView ()
     {
-        Phaser.Scene.call(this, { key: 'BattingView '});
+        Phaser.Scene.call(this, { key: 'BattingView'});
     },
 
     preload: function ()
@@ -299,10 +299,12 @@ var BattingView = new Phaser.Class({
 
         if (pitchPhase === 'ballHit')
         {
-            if (time > ballHitTime + pitchResetTime)
+            /*if (time > ballHitTime + pitchResetTime)
             {
                 pitchPhase = 'setup';
-            }
+            }*/
+
+            this.scene.start('FieldingView');
         }
 
         if (pitchPhase === 'ballMissed')
@@ -313,6 +315,43 @@ var BattingView = new Phaser.Class({
             }
         }
     }
+});
+
+var FieldingView = new Phaser.Class({
+
+    Extends: Phaser.Scene,
+
+    initialize:
+
+    function FieldingView ()
+    {
+        Phaser.Scene.call(this, { key: 'FieldingView' });
+    },
+
+    preload: function()
+    {
+        this.load.image('backgroundFielding', 'assets/fieldingView.png');
+    },
+
+    create: function()
+    {
+        console.log('fielding view');
+        backgroundFielding = this.add.sprite(0, 0, 'backgroundFielding');
+        backgroundFielding.setOrigin(0, 0);
+        backgroundFielding.setScale(4);
+
+        ballField = this.physics.add.sprite(525 * 4, 625 * 4, 'ball');
+
+        camera = this.cameras.main;
+        camera.startFollow(ballField);
+
+    },
+
+    update: function(time, delta)
+    {
+
+    }
+
 });
 
 //game config
@@ -331,9 +370,11 @@ var config = {
         }
     },
     scene: [
-        BattingView
+        BattingView,
+        FieldingView
     ]
 };
+
 
 //starts game
 var game = new Phaser.Game(config);
