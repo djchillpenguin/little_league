@@ -21,3 +21,18 @@ ball hit:
 ball missed:
 	- calculate ball/strike
 	- change state to setup
+
+Fielding View Phases
+
+in-play:
+	- calculate and apply ball height
+	- check for out of play or fielder secure conditions
+
+out-of-play:
+	- conditions = ball contacts out of bounds boundaries (
+	- wait appropriate time, apply necessary runs (HRs) or penalties 
+	  (runners advancing, runs scoring), switch to batting view
+
+fielderSecure:
+	- conditions = fielder in possession of ball for x time
+	- wait appropriate time, switch to batting view

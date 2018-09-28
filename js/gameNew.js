@@ -44,6 +44,51 @@ let pitchArea = {
     rightBottom: { x: 800, y: 700 }
 };
 
+//ball hit variables
+let exitVelocity = 0;
+let exitGroundVelocity = 0;
+let exitAngle = 0;
+let batDepth = 50;
+let ballHitVelocityX = 0;
+let ballHitVelocityY = 0;
+let ballHitVelocityZ = 0;
+let ballHeight = 0;
+let ballStartingHeight = 0;
+let hitAccuracy = 0;
+
+function ballInPlayPhysics(swingTiming, hitAccuracyX, hitAccuracyY)
+{
+    hitAccuracy = Math.abs(hitAccuracyX) + Math.abs(hitAccuracyY);
+
+    if(hitAccuracy != 0)
+    {
+        exitVelocity = 800 * (10 / hitAccuracy);
+    }
+    else
+    {
+        exitVelocity = 800;
+    }
+
+    ballHitVelocityX = swingTiming * 2;
+
+    exitAngle = Math.atan(Math.abs(hitAccuracyY) / batDepth);
+
+    if (hitAccuracyY > 0)
+    {
+        ballHitVelocityZ = exitVelocity * Math.tan(exitAngle);
+    }
+    else
+    {
+        ballHitVelocityZ = exitVelocity * Math.tan(exitAngle) * -1;
+    }
+
+    exitGroundVelocity = exitVelocity * Math.cos(exitAngle);
+
+    //angle = Math.acos(Math.abs(ballHitVelocityX) / exitGroundVelocity);
+    ballHitVelocityY = -1 * exitGroundVelocity * Math.sin(Math.acos(Math.abs(ballHitVelocityX) / exitGroundVelocity));
+}
+
+
 var BattingView = new Phaser.Class({
 
     Extends: Phaser.Scene,
@@ -169,11 +214,6 @@ var BattingView = new Phaser.Class({
             pitchShadow.setVelocityX(0);
             pitchShadow.setVelocityY(0);
 
-            //choose pitch location
-            pitchEndLocation.x = Phaser.Math.Between(pitchArea.leftTop.x, pitchArea.rightTop.x);
-            pitchEndLocation.y = Phaser.Math.Between(pitchArea.leftTop.y, pitchArea.leftBottom.y);
-            shadowEndLocation.x = pitchEndLocation.x;
-
             lastSwingTime = time;
 
             prePitchStartTime = time;
@@ -199,6 +239,15 @@ var BattingView = new Phaser.Class({
             if(time > prePitchStartTime + pitchTime)
             {
                 pitcher.anims.play('pitch');
+
+                //choose pitch location
+                //pitchEndLocation.x = Phaser.Math.Between(pitchArea.leftTop.x, pitchArea.rightTop.x);
+                //pitchEndLocation.y = Phaser.Math.Between(pitchArea.leftTop.y, pitchArea.leftBottom.y);
+
+                pitchEndLocation.x = 640;
+                pitchEndLocation.y = 450;
+                shadowEndLocation.x = pitchEndLocation.x;
+
                 pitchStartTime = time;
                 pitchPhase = 'pitch';
             }
@@ -270,6 +319,7 @@ var BattingView = new Phaser.Class({
                             ball.setVelocityY(-250 * (1 / hitAccuracyY) - 500);
                             pitchShadow.setVelocityX(swingTiming * 25);
                             pitchShadow.setVelocityY(-250);
+                            ballInPlayPhysics(swingTiming, hitAccuracyX, hitAccuracyY);
                             ballHitTime = time;
                             pitchPhase = 'ballHit';
                         }
@@ -344,7 +394,17 @@ var FieldingView = new Phaser.Class({
 
         camera = this.cameras.main;
         camera.startFollow(ballField);
+        camera.setBounds(0, 0, 4320, 2880);
 
+        console.log('ballVelX = ', ballHitVelocityX);
+        console.log('ballVely = ', ballHitVelocityY);
+        console.log('ballVelZ = ', ballHitVelocityZ);
+        console.log('exitV = ', exitVelocity);
+        console.log('exitGV = ', exitGroundVelocity);
+        console.log('exit angle = ', exitAngle);
+        console.log('hit acc = ', hitAccuracy);
+        ballField.setVelocityX(ballHitVelocityX);
+        ballField.setVelocityY(ballHitVelocityY);
     },
 
     update: function(time, delta)
