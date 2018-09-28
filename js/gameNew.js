@@ -66,10 +66,10 @@ function ballInPlayPhysics(swingTiming, hitAccuracyX, hitAccuracyY)
     }
     else
     {
-        exitVelocity = 800;
+        exitVelocity = 1600;
     }
 
-    ballHitVelocityX = swingTiming * 2;
+    ballHitVelocityX = swingTiming * 10;
 
     exitAngle = Math.atan(Math.abs(hitAccuracyY) / batDepth);
 
@@ -199,7 +199,6 @@ var BattingView = new Phaser.Class({
         //setup phase
         if (pitchPhase === 'setup')
         {
-            console.log('setup phase');
             //set idle animations and set ball starting location
             batter.anims.play('batterIdle');
             pitcher.anims.play('pitcherIdle');
@@ -223,7 +222,6 @@ var BattingView = new Phaser.Class({
         //pre pitch phase
         if (pitchPhase === 'prePitch')
         {
-            console.log('pre pitch phase');
             //input
             if (this.input.activePointer.justDown)
             {
@@ -256,7 +254,6 @@ var BattingView = new Phaser.Class({
 
         if (pitchPhase === 'pitch')
         {
-            console.log('pitch phase');
             //start ball animations and motion
             if (time > pitchStartTime + ballReleaseTime)
             {
@@ -291,7 +288,6 @@ var BattingView = new Phaser.Class({
 
         if (pitchPhase === 'ballReleased')
         {
-            console.log('ball released phase');
             //input
             if (this.input.activePointer.justDown)
             {
